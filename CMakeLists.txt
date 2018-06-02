@@ -15,7 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin)
 
 
 
-find_package(Boost COMPONENTS filesystem )
+find_package(Boost COMPONENTS filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
@@ -56,16 +56,23 @@ set_target_properties(uWS PROPERTIES
 add_dependencies(uWS uWS_p)
 
 INCLUDE_DIRECTORIES(${CMAKE_HOME_DIRECTORY}/include)
-file(GLOB src
-    "./include/*.h"
-    "./src/*.cpp"
-)
 
-add_executable(main ${src})
+# file(GLOB src
+#     "./include/*.h"
+#     "./src/*.cpp"
+# )
+
+add_executable(main ${CMAKE_HOME_DIRECTORY}/src/main.cpp)
 target_link_libraries( main uWS )
 target_link_libraries( main ${Boost_LIBRARIES} )
 target_link_libraries( main ${OPENSSL_LIBRARIES} )
 target_link_libraries( main ${ZLIB_LIBRARIES} )
 target_link_libraries (main ${CMAKE_THREAD_LIBS_INIT})
+add_executable(client ${CMAKE_HOME_DIRECTORY}/src/client.cpp)
+target_link_libraries( client uWS )
+target_link_libraries( client ${Boost_LIBRARIES} )
+target_link_libraries( client ${OPENSSL_LIBRARIES} )
+target_link_libraries( client ${ZLIB_LIBRARIES} )
+target_link_libraries ( client ${CMAKE_THREAD_LIBS_INIT})
 # install (TARGETS main DESTINATION bin)
 
