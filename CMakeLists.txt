@@ -46,30 +46,41 @@ ExternalProject_Add( uWS_p
   # make -C ${CMAKE_HOME_DIRECTORY}/uWS/source install
   )
 
-
 add_library(uWS SHARED IMPORTED) # or STATIC instead of SHARED
-set_target_properties(uWS PROPERTIES
-  IMPORTED_LOCATION ${LIBRARY_OUTPUT_PATH}/libuWS.so
-  INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_HOME_DIRECTORY}/uWS
+if(WIN32)
+  # idk man
+elseif(APPLE)
+  set_target_properties(uWS PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.dylib"
+    INTERFACE_INCLUDE_DIRECTORIES  "${CMAKE_HOME_DIRECTORY}/include"
+    )
+else()
+  set_target_properties(uWS PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.so"
+    INTERFACE_INCLUDE_DIRECTORIES  "${CMAKE_HOME_DIRECTORY}/include"
+    )
+endif()
+
+find_library(UV_LIBRARY
+  NAMES uv
 )
+message(STATUS "UV dir: [${UV_LIBRARY}].")
 
 add_dependencies(uWS uWS_p)
 
 INCLUDE_DIRECTORIES(${CMAKE_HOME_DIRECTORY}/include)
 
-# file(GLOB src
-#     "./include/*.h"
-#     "./src/*.cpp"
-# )
-
 add_executable(main ${CMAKE_HOME_DIRECTORY}/src/main.cpp)
 target_link_libraries( main uWS )
+target_link_libraries(main  ${UV_LIBRARY})
 target_link_libraries( main ${Boost_LIBRARIES} )
 target_link_libraries( main ${OPENSSL_LIBRARIES} )
 target_link_libraries( main ${ZLIB_LIBRARIES} )
 target_link_libraries (main ${CMAKE_THREAD_LIBS_INIT})
+
 add_executable(client ${CMAKE_HOME_DIRECTORY}/src/client.cpp)
 target_link_libraries( client uWS )
+target_link_libraries( client  ${UV_LIBRARY})
 target_link_libraries( client ${Boost_LIBRARIES} )
 target_link_libraries( client ${OPENSSL_LIBRARIES} )
 target_link_libraries( client ${ZLIB_LIBRARIES} )
