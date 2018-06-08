@@ -76,6 +76,7 @@ int main() {
   std::vector<std::thread> threadVector;
   int port = 3000;
 
+  std::cout << "waiting on port: " << port << '\n';
   h.onConnection(
       [port, &queue](uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
         std::cout << "server: connected on port " << port << '\n';
@@ -121,8 +122,7 @@ int main() {
     }
 
     // lenght+1 because we add the id of the player which is one addional char
-    ws->send(outMessage, length+1, opCode);
-
+    ws->send(outMessage, length + 1, opCode);
     queue.handleMessage();
   });
 

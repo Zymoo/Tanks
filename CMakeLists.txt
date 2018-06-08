@@ -12,6 +12,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin)
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
 
 
@@ -30,6 +31,7 @@ link_directories(${ZLIB_LIBRARY_DIR})
 find_package(Threads REQUIRED)
 
 
+
 include(ExternalProject)
 ExternalProject_Add( uWS_p
   GIT_REPOSITORY https://github.com/uNetworking/uWebSockets.git
@@ -39,7 +41,7 @@ ExternalProject_Add( uWS_p
   SOURCE_DIR ${CMAKE_HOME_DIRECTORY}/uWS/source
   CONFIGURE_COMMAND ""
   BUILD_COMMAND make -C ${CMAKE_HOME_DIRECTORY}/uWS/source &&
-  cp -a ${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.so ${LIBRARY_OUTPUT_PATH}/  &&
+  cp -a ${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.dylib ${LIBRARY_OUTPUT_PATH}/  &&
   ln -s ${CMAKE_HOME_DIRECTORY}/uWS/source/src ${CMAKE_HOME_DIRECTORY}/include/uWS
   INSTALL_COMMAND  cmake -E echo "Skipping install step."
   # if you want to install
@@ -50,9 +52,9 @@ add_library(uWS SHARED IMPORTED) # or STATIC instead of SHARED
 if(WIN32)
   # idk man
 elseif(APPLE)
-  set_target_properties(uWS PROPERTIES
-    IMPORTED_LOCATION "${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.dylib"
-    INTERFACE_INCLUDE_DIRECTORIES  "${CMAKE_HOME_DIRECTORY}/include"
+  	set_target_properties(uWS PROPERTIES
+    	IMPORTED_LOCATION "${CMAKE_HOME_DIRECTORY}/uWS/source/libuWS.dylib"
+    	INTERFACE_INCLUDE_DIRECTORIES  "${CMAKE_HOME_DIRECTORY}/include"
     )
 else()
   set_target_properties(uWS PROPERTIES
