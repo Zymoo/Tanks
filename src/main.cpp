@@ -72,8 +72,9 @@ int main() {
   int clientPort[] = {3001, 3002, 3003, 3004, 3005, 3006,
                       3007, 3008, 3009, 3010, 3011, 3012};
   std::vector<std::thread> threadVector;
-  int port = 3001;
+  int port = 3000;
 
+  std::cout<<"waiting on port: "<<port<<'\n';
   h.onConnection(
       [port, &queue](uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
         std::cout << "server: connected on port " << port << '\n';
@@ -83,6 +84,7 @@ int main() {
   h.onMessage([port, &queue](uWS::WebSocket<uWS::SERVER>* ws, char* message,
                              size_t length, uWS::OpCode opCode) {
     std::cout << "server: recived message on " << port << '\n';
+    std::cout << "server: messege is " << message << '\n';
     queue.handleMessage();
   });
 
@@ -102,7 +104,7 @@ int main() {
   //   std::ref(q))); clientId++;
   // });
 
-  h.listen(3001);
+  h.listen(3000);
   h.run();
 
   return 0;
