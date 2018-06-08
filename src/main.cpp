@@ -1,4 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <thread>
@@ -72,7 +74,7 @@ int main() {
   int clientPort[] = {3001, 3002, 3003, 3004, 3005, 3006,
                       3007, 3008, 3009, 3010, 3011, 3012};
   std::vector<std::thread> threadVector;
-  int port = 3001;
+  int port = 3000;
 
   h.onConnection(
       [port, &queue](uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
@@ -82,7 +84,45 @@ int main() {
 
   h.onMessage([port, &queue](uWS::WebSocket<uWS::SERVER>* ws, char* message,
                              size_t length, uWS::OpCode opCode) {
-    std::cout << "server: recived message on " << port << '\n';
+    message[length] = 0;
+    std::cout << "server: recived message on " << message << '\n';
+
+    char playerId = '1';
+    char outMessage[30];
+    outMessage[0] = playerId;
+    memcpy(&outMessage[1], message, length);
+
+    switch (message[0]) {
+      case 'p':
+        double x, y;
+        sscanf(&(message[2]), "%lf;%lf", &x, &y);
+        printf("messege p x:%lf, y:%lf \n", x, y);
+        // handle messege
+        break;
+      case 'm':
+        double dir, val;
+        sscanf(&(message[2]), "%lf;%lf", &dir, &val);
+        printf("messege m dir:%lf, val:%lf \n", dir, val);
+        // handle messege
+        break;
+      case 't':
+        double angle;
+        sscanf(&(message[2]), "%lf", &angle);
+        printf("messege t angle:%lf \n", angle);
+        // handle messege
+        break;
+      case 's':
+        double shotX, shotY, shotDir;
+        sscanf(&(message[2]), "%lf;%lf;%lf", &shotX, &shotY, &shotDir);
+        printf("messege s shotX:%lf, shotY:%lf, shotDir:%lf \n", shotX, shotY,
+               shotDir);
+        // handle messege
+        break;
+    }
+
+    // lenght+1 because we add the id of the player which is one addional char
+    ws->send(outMessage, length+1, opCode);
+
     queue.handleMessage();
   });
 
@@ -102,7 +142,7 @@ int main() {
   //   std::ref(q))); clientId++;
   // });
 
-  h.listen(3001);
+  h.listen(3000);
   h.run();
 
   return 0;
