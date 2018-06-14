@@ -9,6 +9,38 @@
 #include <thread>
 #include <vector>
 #include "uWS/uWS.h"
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <iostream>
+
+std::mutex mutex;
+std::condition_variable cond;
+
+
+struct Element {
+	char messageType;
+	int id;
+	int number;
+	std::string message;
+};
+
+Element pop(std::queue<Element> &queue) {
+
+	Element element;
+	std::unique_lock<std::mutex> lock(mutex);
+	cond.wait(lock);
+	element = queue.front();
+	queue.pop();
+	lock.unlock();
+	return element;
+}
+
+void push(std::queue<Element> &queue,Element element) {
+	std::lock_guard<std::mutex> lock(mutex);
+	queue.push(element);
+	cond.notify_one();
+}
 
 struct UserMetaData {
   int port;
