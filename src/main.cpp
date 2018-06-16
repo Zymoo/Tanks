@@ -162,6 +162,8 @@ void clientMain(int port,
                 a = tan(shotDir-180.0);
                 b=shotY-a*shotX;
                 for(int i =0;i<4;i++){
+                    //TODO: shotDir 2 IFs - y Left or Right side
+                    //TODO: Continue when chose self getstate.coords==shot.coords?
                     tmpX = queue.getState(i).positionX;
                     tmpY = queue.getState(i).positionY;
                     wynik=a*tmpX+b;
