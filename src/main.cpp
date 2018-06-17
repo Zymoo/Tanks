@@ -78,10 +78,11 @@ public:
         queue.push(element);
     }
     
-    void updateState(int playerId, int x, int y) {
+    void updateState(char playerId, double x, double y) {
         std::lock_guard<std::mutex> lock(stateMutex);
-        players[playerId].positionX = x;
-        players[playerId].positionY = y;
+        int id = playerId-'0';
+        players[id].positionX = x;
+        players[id].positionY = y;
     }
     
     State getState(int playerId) {
@@ -128,7 +129,7 @@ void clientMain(int port,
         // the message we are reciving from from in in format
         // "messageType,restofthemessage", delimiter is ','
         switch (message[0]) {
-            case 'p':
+            case 'u':
                 // position message, x, y on map
                 double x, y;
                 sscanf(&(message[2]), "%lf,%lf", &x, &y);
@@ -164,19 +165,22 @@ void clientMain(int port,
                 for(int i =0;i<4;i++){
                     //TODO: shotDir 2 IFs - y Left or Right side
                     //TODO: Continue when chose self getstate.coords==shot.coords?
+                    //TODO: STOP on first target.
+                    //TODO: Delete 'dlaSpajkiego'
+                    //TODO: sizeof(dlaSpajkiego) +1 HMMMMMMMMMMMMMMMMMMMMM
                     tmpX = queue.getState(i).positionX;
                     tmpY = queue.getState(i).positionY;
+                    printf("%lf,%lf\n", tmpX,tmpY);
                     wynik=a*tmpX+b;
-                    if(wynik>tmpY-50 && wynik<tmpY-50){
-                        printf("JEBLOO");
+                    if(wynik>tmpY-50 && wynik<tmpY+50){
+                        Element element;
+                       
+                         char* dlaSpajkiego = new char[40];
+                        sprintf(dlaSpajkiego, "b%d,%lf,%lf", i,tmpX,tmpY);
+                        saveToQueue(element, queue, dlaSpajkiego, i, 30);
+                        
                     }
                 }
-                
-                
-                
-                
-                
-                
                 break;
         }
         // TODO implement the state of the game, after shot we should check if some
