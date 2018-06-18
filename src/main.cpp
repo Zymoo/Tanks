@@ -15,6 +15,7 @@
 
 std::mutex mutex;
 std::mutex stateMutex;
+std::mutex escapeMutex;
 
 struct UserMetaData {
   int port;
@@ -40,6 +41,7 @@ class Queue {
   std::vector<char> freePlayerId = {'0', '1', '2', '3'};
   std::vector<int> ports = {3001, 3002, 3003, 3004, 3005, 3006,
                             3007, 3008, 3009, 3010, 3011, 3012};
+
   std::vector<std::string> welcomeMessage = {
       std::string("hullDir:315,turretDir:315,x:3190,y:2540"),
       std::string("hullDir:45,turretDir:45,x:400,y:2540"),
@@ -117,24 +119,37 @@ class Queue {
 
   char getFreeId() {
     char id = 0;
+    std::unique_lock<std::mutex> lock(escapeMutex);
     if (!freePlayerId.empty()) {
       id = freePlayerId.back();
       freePlayerId.pop_back();
     }
+    lock.unlock();
     return id;
   }
 
   int getFreePort() {
     int port = 0;
+    std::unique_lock<std::mutex> lock(escapeMutex);
     if (!ports.empty()) {
       port = ports.back();
       ports.pop_back();
     }
+    lock.unlock();
     return port;
   }
+
+  void addNewPort(int port) {
+    std::unique_lock<std::mutex> lock(escapeMutex);
+    ports.push_back(port);
+    lock.unlock();
+  }
+  void addFreeId(char id) {
+    std::unique_lock<std::mutex> lock(escapeMutex);
+    freePlayerId.push_back(id);
+    lock.unlock();
+  }
   std::string getInitialMessage(char id) { return welcomeMessage.at(id - '0'); }
-  void addNewPort(int port) { ports.push_back(port); }
-  void addFreeId(char id) { freePlayerId.push_back(id); }
 };
 
 void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
@@ -151,8 +166,7 @@ void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
     message[length] = 0;
     UserMetaData* userMetaData = (UserMetaData*)ws->getUserData();
     char playerId = userMetaData->id;
-    //        printf("%s\n",message);
-    // this swich is a cringy do something about it
+
     // the messega we are storing in Element is in format
     // "messegatype,plyerID,resofthemessage" in restofthemessage delimiter is
     // ','
@@ -251,6 +265,7 @@ int main() {
     // instead of this shamefull code with char* and magic number create a
     // std::string and just before ws->send() transrofm it to char*;
     // the form of the message is "port,userid,welcomeMessage"
+
     std::string tmpWelcomeMessage = queue.getInitialMessage(userData->id);
     int messageSize = tmpWelcomeMessage.length();
     char* message = new char[messageSize + 2 + 6 + 1];
