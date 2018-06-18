@@ -131,6 +131,95 @@ class Queue {
   void addNewPort(int port) { ports.push_back(port); }
   void addFreeId(char id) { freePlayerId.push_back(id); }
 };
+void clientMain(int port,
+                Queue& queue,
+                UserMetaData* userMetaData,
+                std::vector<uWS::WebSocket<uWS::SERVER>*>& websockets) {
+  uWS::Hub h;
+  h.onConnection([port, &queue, userMetaData, &websockets](
+                     uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
+    std::cout << "server thread: connected on port " << port << '\n';
+    //
+    websockets.push_back(ws);
+    ws->setUserData(userMetaData);
+  });
+  h.onMessage([&queue](uWS::WebSocket<uWS::SERVER>* ws, char* message,
+                       size_t length, uWS::OpCode opCode) {
+    message[length] = 0;
+    //        std::cout << "server: recived message on " << message << '\n';
+    UserMetaData* userMetaData = (UserMetaData*)ws->getUserData();
+    char playerId = userMetaData->id;
+    // this swich is a cringy do something about it
+    // the messega we are storing in Element is in format
+    // "messegatype,plyerID,resofthemessage" in restofthemessage delimiter is
+    // ','
+    // the message we are reciving from from in in format
+    // "messageType,restofthemessage", delimiter is ','
+    switch (message[0]) {
+      case 'u':
+        // position message, x, y on map
+        double x, y;
+        sscanf(&(message[2]), "%lf,%lf", &x, &y);
+        //                printf("messege p x:%lf, y:%lf \n", x, y);
+        queue.updateState(playerId, x, y);
+        // handle messege
+        break;
+      case 'm':
+        // move message
+        double dir, val;
+        sscanf(&(message[2]), "%lf,%lf", &dir, &val);
+        //                printf("messege m dir:%lf, val:%lf \n", dir, val);
+        // handle messege
+        break;
+      case 't':
+        // move head of the tank
+        double angle;
+        sscanf(&(message[2]), "%lf", &angle);
+        //                printf("messege t angle:%lf \n", angle);
+        // handle messege
+        break;
+      case 's':
+        // shot
+        double shotX, shotY, shotDir, b, a, tmpX, tmpY, wynik;
+        sscanf(&(message[2]), "%lf,%lf,%lf", &shotX, &shotY, &shotDir);
+        //                printf("messege s shotX:%lf, shotY:%lf, shotDir:%lf
+        //                \n", shotX, shotY,
+        //                       shotDir);
+        double newX;
+        double newY;
+
+        a = tan(shotDir * PI / 180.0);
+        b = shotY - a * shotX;
+        for (int i = 0; i < 4; i++) {
+          // TODO: shotDir 2 IFs - y Left or Right side
+          // TODO: STOP on first target.
+          // TODO: sizeof(dlaSpajkiego) +1
+          tmpX = queue.getState(i).positionX;
+          tmpY = queue.getState(i).positionY;
+          //                    printf("%lf,%lf\n", tmpX,tmpY);
+          wynik = a * tmpX + b;
+
+          if (wynik > tmpY - 100 && wynik < tmpY + 100 && playerId - '0' != i) {
+            char* dlaSpajkiego = new char[40];
+            sprintf(dlaSpajkiego, "b%d,%lf,%lf", i, tmpX, tmpY);
+            saveToQueue(dlaSpajkiego, i, 30);
+            delete[] dlaSpajkiego;
+          }
+        }
+
+        break;
+    }
+    // TODO implement the state of the game, after shot we should check if some
+    // player is in line
+
+    // remove this cringy char* do all on std::string
+    // lenght+1 because we add the id of the player which is one addional
+    // char
+    queue.saveToQueue(message, playerId, length);
+  });
+  h.listen(port);
+  h.run();
+}
 
 void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
   uWS::Hub h;
@@ -195,14 +284,12 @@ void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
   });
   h.onDisconnection([&queue](uWS::WebSocket<uWS::SERVER>* ws, int code,
                              char* message, size_t length) {
-
     UserMetaData* userMetaData = (UserMetaData*)ws->getUserData();
     char playerId = userMetaData->id;
     int port = userMetaData->port;
     queue.addNewPort(port);
     queue.addFreeId(playerId);
     queue.removeWebsocket(ws);
-
   });
   h.listen(port);
   h.run();
