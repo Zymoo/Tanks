@@ -223,10 +223,32 @@ void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
                     wynik = a * tmpX + b;
 
                     if (wynik>tmpY - 100 && wynik<tmpY + 100 && playerId - '0' != i && tmpX>1.0 && tmpY>1.0) {
-                        char* dlaSpajkiego = new char[40];
-                        sprintf(dlaSpajkiego, "b%d,%lf,%lf,%c", i, tmpX, tmpY, playerId);
-                        queue.saveToQueue(dlaSpajkiego, i, 30);
-                        delete[] dlaSpajkiego;
+					bool hit = false;
+
+					if (shotDir < 90) {
+						if (tmpY <= shotY && tmpX <= shotX)
+							hit = true;
+					}
+					else if (shotDir < 180) {
+						if (tmpY <= shotY && tmpX >= shotX)
+							hit = true;
+
+					}
+					else if (shotDir < 270) {
+						if (tmpY >= shotY && tmpX >= shotX)
+							hit = true;
+					}
+					else if (shotDir < 360) {
+						if (tmpY >= shotY && tmpX <= shotX)
+							hit = true;
+					}
+
+					if (hit) {
+						char* dlaSpajkiego = new char[40];
+						sprintf(dlaSpajkiego, "b%d,%lf,%lf,%c", i, tmpX, tmpY, playerId);
+						queue.saveToQueue(dlaSpajkiego, i, 30);
+						delete[] dlaSpajkiego;
+					}
                     }
                 }
 
