@@ -119,7 +119,7 @@ void clientMain(int port,
     h.onMessage([&queue](uWS::WebSocket<uWS::SERVER>* ws, char* message,
                          size_t length, uWS::OpCode opCode) {
         message[length] = 0;
-        std::cout << "server: recived message on " << message << '\n';
+//        std::cout << "server: recived message on " << message << '\n';
         UserMetaData* userMetaData = (UserMetaData*)ws->getUserData();
         char playerId = userMetaData->id;
         // this swich is a cringy do something about it
@@ -133,7 +133,7 @@ void clientMain(int port,
                 // position message, x, y on map
                 double x, y;
                 sscanf(&(message[2]), "%lf,%lf", &x, &y);
-                printf("messege p x:%lf, y:%lf \n", x, y);
+//                printf("messege p x:%lf, y:%lf \n", x, y);
                 queue.updateState(playerId, x, y);
                 // handle messege
                 break;
@@ -141,46 +141,45 @@ void clientMain(int port,
                 // move message
                 double dir, val;
                 sscanf(&(message[2]), "%lf,%lf", &dir, &val);
-                printf("messege m dir:%lf, val:%lf \n", dir, val);
+//                printf("messege m dir:%lf, val:%lf \n", dir, val);
                 // handle messege
                 break;
             case 't':
                 // move head of the tank
                 double angle;
                 sscanf(&(message[2]), "%lf", &angle);
-                printf("messege t angle:%lf \n", angle);
+//                printf("messege t angle:%lf \n", angle);
                 // handle messege
                 break;
             case 's':
                 // shot
                 double shotX, shotY, shotDir,b,a,tmpX,tmpY,wynik;
                 sscanf(&(message[2]), "%lf,%lf,%lf", &shotX, &shotY, &shotDir);
-                printf("messege s shotX:%lf, shotY:%lf, shotDir:%lf \n", shotX, shotY,
-                       shotDir);
+//                printf("messege s shotX:%lf, shotY:%lf, shotDir:%lf \n", shotX, shotY,
+//                       shotDir);
                                 double newX;
                                 double newY;
 
-                a = tan(shotDir-180.0);
+                a = tan(shotDir*PI/180.0);
                 b=shotY-a*shotX;
                 for(int i =0;i<4;i++){
                     //TODO: shotDir 2 IFs - y Left or Right side
-                    //TODO: Continue when chose self getstate.coords==shot.coords?
                     //TODO: STOP on first target.
-                    //TODO: Delete 'dlaSpajkiego'
-                    //TODO: sizeof(dlaSpajkiego) +1 HMMMMMMMMMMMMMMMMMMMMM
+                    //TODO: sizeof(dlaSpajkiego) +1
                     tmpX = queue.getState(i).positionX;
                     tmpY = queue.getState(i).positionY;
-                    printf("%lf,%lf\n", tmpX,tmpY);
+//                    printf("%lf,%lf\n", tmpX,tmpY);
                     wynik=a*tmpX+b;
-                    if(wynik>tmpY-50 && wynik<tmpY+50){
+                    
+                    if(wynik>tmpY-100 && wynik<tmpY+100 && playerId-'0'!=i){
                         Element element;
-                       
-                         char* dlaSpajkiego = new char[40];
+                        char* dlaSpajkiego = new char[40];
                         sprintf(dlaSpajkiego, "b%d,%lf,%lf", i,tmpX,tmpY);
                         saveToQueue(element, queue, dlaSpajkiego, i, 30);
-                        
+                        delete[] dlaSpajkiego;
                     }
                 }
+                
                 break;
         }
         // TODO implement the state of the game, after shot we should check if some
