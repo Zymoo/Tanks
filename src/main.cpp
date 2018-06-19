@@ -217,7 +217,7 @@ void clientMain(int port, Queue& queue, UserMetaData* userMetaData) {
         // ','
         // the message we are reciving from from in in format
         // "messageType,restofthemessage", delimiter is ','
-        printf("%s\n",message);
+//        printf("%s\n",message);
         switch (message[0]) {
             case 'u':
                 // position message, x, y on map
